@@ -124,6 +124,20 @@ html, body {
 .ctrl-btn:active { transform: scale(0.92); background: var(--accent); }
 /* Location button when actively tracking */
 .ctrl-btn.active { background: var(--accent); color: #fff; }
+/* Location button when OFF — dimmed with a red diagonal slash through it. */
+.ctrl-btn.loc-off { position: relative; opacity: 0.6; }
+.ctrl-btn.loc-off::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 30px;
+  height: 3px;
+  background: #ff6d6d;
+  border-radius: 2px;
+  transform: rotate(-45deg);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+}
 
 /* ---- Bottom status ---------------------------------------------------- */
 .status {

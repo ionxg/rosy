@@ -65,7 +65,8 @@ function updateAvatarVisibility() {
   const lat = map.getCenter().lat;
   const hideZoom = zoomForScaleMeters(CONFIG.avatarHideMeters, lat);
   avatarsVisible = map.getZoom() >= hideZoom;
-  if (selfAvatar) selfAvatar.setVisible(avatarsVisible);
+  // Your own dot also requires location to be ON (so toggling off hides you).
+  if (selfAvatar) selfAvatar.setVisible(avatarsVisible && locationOn);
   net.setPeersVisible(avatarsVisible);
 }
 map.on('zoom', updateAvatarVisibility);
@@ -140,13 +141,15 @@ function stopGeolocation() {
   }
   locationOn = false;
   updateLocationButton();
-  setStatus('Location off — you’re hidden from other explorers', true);
+  updateAvatarVisibility();   // hide your own dot right away
+  setStatus('Location off — your dot is hidden and you’ve stopped sharing', true);
 }
 
 function updateLocationButton() {
   const btn = document.getElementById('btn-location');
   if (!btn) return;
-  btn.classList.toggle('active', locationOn);
+  btn.classList.toggle('active', locationOn);   // lit when tracking
+  btn.classList.toggle('loc-off', !locationOn); // red slash when off
   btn.setAttribute('aria-pressed', String(locationOn));
   btn.title = locationOn ? 'Location on — tap to turn off' : 'Location off — tap to turn on';
 }
@@ -160,7 +163,7 @@ function onPosition(pos) {
 
   if (!selfAvatar) {
     selfAvatar = new Avatar(map, { lng, lat, color: '#ff5d8f', self: true, heading: hdg });
-    selfAvatar.setVisible(avatarsVisible);
+    updateAvatarVisibility();
   } else {
     selfAvatar.moveTo(lng, lat, hdg);
   }
@@ -201,16 +204,16 @@ function useFallbackLocation() {
   lastLoc = { lng, lat };
   if (!selfAvatar) {
     selfAvatar = new Avatar(map, { lng, lat, color: '#ff5d8f', self: true });
-    selfAvatar.setVisible(avatarsVisible);
   }
   if (!didFirstFly) {
     didFirstFly = true;
     flyTo(map, lng, lat, { zoom: startZoomFor(lat) });
     map.once('moveend', updateAvatarVisibility);
   }
+  updateAvatarVisibility();   // location is off in fallback, so this hides your dot
   placeLayers();
   maybeStartDemoBots(lastLoc);
-  net.sendPosition(lng, lat, 0);
+  if (locationOn) net.sendPosition(lng, lat, 0); // don't broadcast a position while off
 }
 
 // --- Control buttons -------------------------------------------------------
