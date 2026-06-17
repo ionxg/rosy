@@ -6,11 +6,9 @@ export const CONFIG = {
   // Swap for a MapTiler/your own style URL if you prefer.
   mapStyle: 'https://tiles.openfreemap.org/styles/liberty',
 
-  // Socket.io endpoint. Same origin in dev (served by our Node server).
-  // NOTE: in the installed app, "origin" is the device itself, so real
-  // multiplayer won't connect until you deploy the server somewhere public and
-  // set this to that URL, e.g. 'https://your-rosy-server.example.com'.
-  socketUrl: window.location.origin,
+  // Socket.io endpoint — the deployed Rosy multiplayer server on Render.
+  // All players (mobile app + web) connect here so they see each other live.
+  socketUrl: 'https://rosy-server.onrender.com',
 
   // Initial camera before we get a GPS fix (San Francisco-ish).
   fallbackCenter: [-122.4194, 37.7749],

@@ -19,7 +19,21 @@ import { startDemoBots } from './demo.js';
 import { bearing } from './geo.js';
 import { ensureLocationPermission, ensureLocationServices } from './native.js';
 
-const map = createMap();
+// Remember the last place we saw the user so the app reopens there (instead of
+// a hard-coded city) and so a denied/blocked GPS falls back somewhere relevant.
+const LAST_LOC_KEY = 'rosy:lastLoc';
+function loadLastLoc() {
+  try {
+    const v = JSON.parse(localStorage.getItem(LAST_LOC_KEY));
+    if (v && Number.isFinite(v.lng) && Number.isFinite(v.lat)) return v;
+  } catch { /* ignore */ }
+  return null;
+}
+function saveLastLoc(lng, lat) {
+  try { localStorage.setItem(LAST_LOC_KEY, JSON.stringify({ lng, lat })); } catch { /* ignore */ }
+}
+
+const map = createMap(loadLastLoc());
 initUI();
 
 // Presence shown = real online players (from server) + any local demo bots.
@@ -141,6 +155,7 @@ function onPosition(pos) {
   }
 
   lastLoc = loc;
+  saveLastLoc(lng, lat); // so next launch opens here, not a default city
   net.sendPosition(lng, lat, hdg);
 }
 
@@ -157,7 +172,10 @@ function onGeoError(err) {
 }
 
 function useFallbackLocation() {
-  const [lng, lat] = CONFIG.fallbackCenter;
+  // Prefer where we last saw the user; only fall back to the configured city
+  // if we've genuinely never had a fix on this device.
+  const last = loadLastLoc();
+  const [lng, lat] = last ? [last.lng, last.lat] : CONFIG.fallbackCenter;
   lastLoc = { lng, lat };
   if (!selfAvatar) {
     selfAvatar = new Avatar(map, { lng, lat, color: '#ff5d8f', self: true });

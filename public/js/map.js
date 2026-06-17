@@ -6,14 +6,21 @@
  */
 import { CONFIG } from './config.js';
 
-export function createMap() {
+/**
+ * @param {{lng:number,lat:number}|null} [initialLoc] last-known user location,
+ *   used so the app opens where you were instead of a hard-coded city. When
+ *   absent (first ever launch) we open on a neutral zoomed-out world view rather
+ *   than dropping into San Francisco.
+ */
+export function createMap(initialLoc) {
+  const hasLoc = initialLoc && Number.isFinite(initialLoc.lng) && Number.isFinite(initialLoc.lat);
   const map = new maplibregl.Map({
     container: 'map',
     style: CONFIG.mapStyle,
-    center: CONFIG.fallbackCenter,
-    zoom: CONFIG.defaultZoom,
-    pitch: CONFIG.tiltedPitch,
-    bearing: -20,
+    center: hasLoc ? [initialLoc.lng, initialLoc.lat] : CONFIG.fallbackCenter,
+    zoom: hasLoc ? CONFIG.defaultZoom : 1.6,   // world view until we know where you are
+    pitch: hasLoc ? CONFIG.tiltedPitch : 0,
+    bearing: hasLoc ? -20 : 0,
     antialias: true,        // smoother building edges
     attributionControl: { compact: true },
   });

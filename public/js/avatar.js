@@ -49,8 +49,14 @@ export class Avatar {
 
     this.marker = new maplibregl.Marker({
       element: el,
+      anchor: 'center',
+      // rotationAlignment 'map' keeps the heading arrow pointing the correct
+      // geographic way as the map rotates. pitchAlignment 'viewport' keeps the
+      // avatar standing UPRIGHT (a billboard pinned to its lng/lat) instead of
+      // lying flat on the ground — so it stays locked to the right spot when you
+      // zoom/tilt and doesn't drift or vanish past the horizon.
       rotationAlignment: 'map',
-      pitchAlignment: 'map',
+      pitchAlignment: 'viewport',
     });
 
     // Interpolation state.
