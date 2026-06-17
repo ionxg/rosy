@@ -6,16 +6,21 @@
  */
 import { CONFIG } from './config.js';
 
+// Width (in CSS px) the on-screen scale bar spans — matches MapLibre's
+// ScaleControl default. We frame the camera so `meters` equals what that bar
+// reads, which is the distance people actually judge "how zoomed in am I" by.
+const SCALE_REF_PX = 100;
+
 /**
- * Web-Mercator zoom level at which `meters` of ground spans the viewport width.
- * Lets us frame the camera in real-world metres instead of an opaque zoom number.
- * @param {number} meters  desired ground width across the screen
+ * Web-Mercator zoom level at which the scale bar reads ~`meters`.
+ * Lets us frame the camera in the real-world metres the user sees on the ruler
+ * instead of an opaque zoom number.
+ * @param {number} meters  desired scale-bar reading in metres
  * @param {number} lat     latitude (mercator scale depends on it)
- * @param {number} widthPx viewport width in CSS pixels
  */
-export function zoomForGroundWidth(meters, lat, widthPx) {
-  const w = widthPx || 400;
-  const z = Math.log2((156543.03392 * Math.cos((lat * Math.PI) / 180) * w) / meters);
+export function zoomForScaleMeters(meters, lat) {
+  const metersPerPixel = meters / SCALE_REF_PX;
+  const z = Math.log2((156543.03392 * Math.cos((lat * Math.PI) / 180)) / metersPerPixel);
   return Math.min(22, Math.max(1, z));
 }
 
@@ -27,9 +32,8 @@ export function zoomForGroundWidth(meters, lat, widthPx) {
  */
 export function createMap(initialLoc) {
   const hasLoc = initialLoc && Number.isFinite(initialLoc.lng) && Number.isFinite(initialLoc.lat);
-  const containerW = (document.getElementById('map') || {}).clientWidth || window.innerWidth || 400;
   const startZoom = hasLoc
-    ? zoomForGroundWidth(CONFIG.startViewMeters, initialLoc.lat, containerW)
+    ? zoomForScaleMeters(CONFIG.startViewMeters, initialLoc.lat)
     : 1.6; // world view until we know where you are
   const map = new maplibregl.Map({
     container: 'map',

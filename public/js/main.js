@@ -9,7 +9,7 @@
  *   5. Load POI + sponsor layers from JSON (placed near the user in demo mode).
  */
 import { CONFIG } from './config.js';
-import { createMap, flyTo, toggleTilt, resetNorth, zoomForGroundWidth } from './map.js';
+import { createMap, flyTo, toggleTilt, resetNorth, zoomForScaleMeters } from './map.js';
 import { Avatar } from './avatar.js';
 import { Multiplayer } from './multiplayer.js';
 import { POILayer } from './pois.js';
@@ -54,16 +54,16 @@ let geoWatchId = null;   // active watchPosition id, or null when location is of
 let locationOn = false;  // whether we're actively tracking + sharing location
 let avatarsVisible = true; // avatars (incl. self) hide when zoomed out past the threshold
 
-// The zoom level the opening / recenter view should use (≈ startViewMeters wide).
+// The zoom level the opening / recenter view should use (scale bar ≈ startViewMeters).
 function startZoomFor(lat) {
-  return zoomForGroundWidth(CONFIG.startViewMeters, lat, map.getContainer().clientWidth);
+  return zoomForScaleMeters(CONFIG.startViewMeters, lat);
 }
 
-// Hide every avatar (peers + self) once the view is wider than avatarHideMeters,
-// so they only appear when you're zoomed in close.
+// Hide every avatar (peers + self) once the view is wider than avatarHideMeters
+// (scale bar reads more than that), so they only appear when you're zoomed in.
 function updateAvatarVisibility() {
   const lat = map.getCenter().lat;
-  const hideZoom = zoomForGroundWidth(CONFIG.avatarHideMeters, lat, map.getContainer().clientWidth);
+  const hideZoom = zoomForScaleMeters(CONFIG.avatarHideMeters, lat);
   avatarsVisible = map.getZoom() >= hideZoom;
   if (selfAvatar) selfAvatar.setVisible(avatarsVisible);
   net.setPeersVisible(avatarsVisible);
