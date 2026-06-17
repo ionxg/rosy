@@ -47,11 +47,11 @@ export function createMap(initialLoc) {
   // a small twist; left on, that twist spins the map (and made stationary peers
   // look like they were moving). Disabling it keeps phone zoom a clean, stable
   // zoom — matching how it already behaves on desktop with the scroll wheel.
-  // Lock camera ROTATION entirely (north stays up) — both the desktop right-drag
-  // and the touch two-finger twist. Zoom and the 3D tilt button still work; this
-  // just stops the map (and avatars) from spinning when you pinch-zoom on a phone.
-  map.dragRotate.disable();
-  map.touchZoomRotate.disableRotation();
+  // Rotation + pitch gestures are ON (two-finger twist / right-drag). Avatars are
+  // viewport-aligned now, so they stay pinned to their real spot even while the
+  // map rotates — rotating the map no longer makes peers look like they're moving.
+  map.dragRotate.enable();
+  map.touchZoomRotate.enableRotation();
   map.keyboard.enable();
 
   // Built-in nav (zoom +/-, compass, pitch visualizer).
