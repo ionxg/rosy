@@ -17,6 +17,7 @@ export class Multiplayer {
     this.map = map;
     this.onPresence = onPresence || (() => {});
     this.peers = new Map(); // id -> Avatar
+    this.onSpawn = null;    // optional hook(avatar) called when a peer is created
     this.selfId = null;
     this.lastSent = 0;
     this._name = null;
@@ -74,6 +75,12 @@ export class Multiplayer {
       lng: p.lng, lat: p.lat, name: p.name, color: p.color, heading: p.heading,
     });
     this.peers.set(p.id, avatar);
+    if (this.onSpawn) this.onSpawn(avatar); // let the app apply current zoom visibility
+  }
+
+  /** Show/hide all peer avatars at once (zoom-based visibility). */
+  setPeersVisible(visible) {
+    for (const a of this.peers.values()) a.setVisible(visible);
   }
 
   /** Set a display name / color for this player and broadcast it. */

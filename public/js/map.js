@@ -7,6 +7,19 @@
 import { CONFIG } from './config.js';
 
 /**
+ * Web-Mercator zoom level at which `meters` of ground spans the viewport width.
+ * Lets us frame the camera in real-world metres instead of an opaque zoom number.
+ * @param {number} meters  desired ground width across the screen
+ * @param {number} lat     latitude (mercator scale depends on it)
+ * @param {number} widthPx viewport width in CSS pixels
+ */
+export function zoomForGroundWidth(meters, lat, widthPx) {
+  const w = widthPx || 400;
+  const z = Math.log2((156543.03392 * Math.cos((lat * Math.PI) / 180) * w) / meters);
+  return Math.min(22, Math.max(1, z));
+}
+
+/**
  * @param {{lng:number,lat:number}|null} [initialLoc] last-known user location,
  *   used so the app opens where you were instead of a hard-coded city. When
  *   absent (first ever launch) we open on a neutral zoomed-out world view rather
@@ -14,13 +27,17 @@ import { CONFIG } from './config.js';
  */
 export function createMap(initialLoc) {
   const hasLoc = initialLoc && Number.isFinite(initialLoc.lng) && Number.isFinite(initialLoc.lat);
+  const containerW = (document.getElementById('map') || {}).clientWidth || window.innerWidth || 400;
+  const startZoom = hasLoc
+    ? zoomForGroundWidth(CONFIG.startViewMeters, initialLoc.lat, containerW)
+    : 1.6; // world view until we know where you are
   const map = new maplibregl.Map({
     container: 'map',
     style: CONFIG.mapStyle,
     center: hasLoc ? [initialLoc.lng, initialLoc.lat] : CONFIG.fallbackCenter,
-    zoom: hasLoc ? CONFIG.defaultZoom : 1.6,   // world view until we know where you are
+    zoom: startZoom,
     pitch: hasLoc ? CONFIG.tiltedPitch : 0,
-    bearing: hasLoc ? -20 : 0,
+    bearing: 0,             // north-up; rotation is locked (see below)
     antialias: true,        // smoother building edges
     attributionControl: { compact: true },
   });
@@ -30,7 +47,10 @@ export function createMap(initialLoc) {
   // a small twist; left on, that twist spins the map (and made stationary peers
   // look like they were moving). Disabling it keeps phone zoom a clean, stable
   // zoom — matching how it already behaves on desktop with the scroll wheel.
-  map.dragRotate.enable();
+  // Lock camera ROTATION entirely (north stays up) — both the desktop right-drag
+  // and the touch two-finger twist. Zoom and the 3D tilt button still work; this
+  // just stops the map (and avatars) from spinning when you pinch-zoom on a phone.
+  map.dragRotate.disable();
   map.touchZoomRotate.disableRotation();
   map.keyboard.enable();
 

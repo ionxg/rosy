@@ -18,6 +18,10 @@ export const CONFIG = {
   tiltedPitch: 60,
   flatPitch: 0,
 
+  // Framing in real-world metres (close, Pokémon-GO-style view).
+  startViewMeters: 20,   // opening / recenter view is roughly this many metres across
+  avatarHideMeters: 50,  // hide ALL avatars (including you) once the view is wider than this
+
   // Data files for the POI + sponsor layers.
   poiData: './data/pois.json',
   sponsorData: './data/sponsors.json',

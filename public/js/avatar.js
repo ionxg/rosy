@@ -155,6 +155,11 @@ export class Avatar {
     }
   }
 
+  /** Show/hide the avatar (used to hide everyone when the view is zoomed out). */
+  setVisible(visible) {
+    this.el.style.display = visible ? '' : 'none';
+  }
+
   remove() {
     if (this._anim) cancelAnimationFrame(this._anim);
     this.marker.remove();

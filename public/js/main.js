@@ -9,7 +9,7 @@
  *   5. Load POI + sponsor layers from JSON (placed near the user in demo mode).
  */
 import { CONFIG } from './config.js';
-import { createMap, flyTo, toggleTilt, resetNorth } from './map.js';
+import { createMap, flyTo, toggleTilt, resetNorth, zoomForGroundWidth } from './map.js';
 import { Avatar } from './avatar.js';
 import { Multiplayer } from './multiplayer.js';
 import { POILayer } from './pois.js';
@@ -52,6 +52,25 @@ let didFirstFly = false;
 let demoStarted = false;
 let geoWatchId = null;   // active watchPosition id, or null when location is off
 let locationOn = false;  // whether we're actively tracking + sharing location
+let avatarsVisible = true; // avatars (incl. self) hide when zoomed out past the threshold
+
+// The zoom level the opening / recenter view should use (≈ startViewMeters wide).
+function startZoomFor(lat) {
+  return zoomForGroundWidth(CONFIG.startViewMeters, lat, map.getContainer().clientWidth);
+}
+
+// Hide every avatar (peers + self) once the view is wider than avatarHideMeters,
+// so they only appear when you're zoomed in close.
+function updateAvatarVisibility() {
+  const lat = map.getCenter().lat;
+  const hideZoom = zoomForGroundWidth(CONFIG.avatarHideMeters, lat, map.getContainer().clientWidth);
+  avatarsVisible = map.getZoom() >= hideZoom;
+  if (selfAvatar) selfAvatar.setVisible(avatarsVisible);
+  net.setPeersVisible(avatarsVisible);
+}
+map.on('zoom', updateAvatarVisibility);
+// New peers that appear while zoomed out should respect the current visibility.
+net.onSpawn = (a) => a.setVisible(avatarsVisible);
 
 const SUGGESTED_NAMES = ['Explorer', 'Wanderer', 'Otter', 'Sparrow', 'Comet', 'Nomad', 'Fox'];
 const randomName = () =>
@@ -141,17 +160,20 @@ function onPosition(pos) {
 
   if (!selfAvatar) {
     selfAvatar = new Avatar(map, { lng, lat, color: '#ff5d8f', self: true, heading: hdg });
+    selfAvatar.setVisible(avatarsVisible);
   } else {
     selfAvatar.moveTo(lng, lat, hdg);
   }
 
   if (!didFirstFly) {
     didFirstFly = true;
-    flyTo(map, lng, lat, { zoom: CONFIG.defaultZoom, pitch: CONFIG.tiltedPitch });
+    flyTo(map, lng, lat, { zoom: startZoomFor(lat), pitch: CONFIG.tiltedPitch });
     setStatus('You are here — explore the map!', true);
     // Place demo layers around the user now that we know where they are.
     if (CONFIG.scatterNearUser) { lastLoc = loc; placeLayers(); }
     maybeStartDemoBots(loc);
+    // Re-evaluate avatar visibility once we've settled at the close-up view.
+    map.once('moveend', updateAvatarVisibility);
   }
 
   lastLoc = loc;
@@ -179,10 +201,12 @@ function useFallbackLocation() {
   lastLoc = { lng, lat };
   if (!selfAvatar) {
     selfAvatar = new Avatar(map, { lng, lat, color: '#ff5d8f', self: true });
+    selfAvatar.setVisible(avatarsVisible);
   }
   if (!didFirstFly) {
     didFirstFly = true;
-    flyTo(map, lng, lat);
+    flyTo(map, lng, lat, { zoom: startZoomFor(lat) });
+    map.once('moveend', updateAvatarVisibility);
   }
   placeLayers();
   maybeStartDemoBots(lastLoc);
@@ -191,7 +215,7 @@ function useFallbackLocation() {
 
 // --- Control buttons -------------------------------------------------------
 document.getElementById('btn-recenter').addEventListener('click', () => {
-  if (lastLoc) flyTo(map, lastLoc.lng, lastLoc.lat, { zoom: CONFIG.defaultZoom });
+  if (lastLoc) flyTo(map, lastLoc.lng, lastLoc.lat, { zoom: startZoomFor(lastLoc.lat) });
 });
 document.getElementById('btn-tilt').addEventListener('click', () => toggleTilt(map));
 document.getElementById('btn-compass').addEventListener('click', () => resetNorth(map));
