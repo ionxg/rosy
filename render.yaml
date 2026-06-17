@@ -1,0 +1,12 @@
+# Render blueprint for the Rosy multiplayer server.
+# When you connect this repo on render.com, Render reads this file and sets the
+# service up automatically (no manual field entry needed).
+services:
+  - type: web
+    name: rosy-server
+    runtime: node
+    plan: free
+    rootDir: server          # the Node server lives in /server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz # server.js exposes this for uptime checks

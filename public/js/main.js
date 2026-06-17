@@ -1,0 +1,215 @@
+/**
+ * main.js — app entry point
+ * -------------------------
+ * Wires the modules together:
+ *   1. Build the map (3D buildings + camera controls).
+ *   2. Watch the browser Geolocation API.
+ *   3. Drop/move the local avatar; broadcast position over Socket.io.
+ *   4. Render remote peers + presence count.
+ *   5. Load POI + sponsor layers from JSON (placed near the user in demo mode).
+ */
+import { CONFIG } from './config.js';
+import { createMap, flyTo, toggleTilt, resetNorth } from './map.js';
+import { Avatar } from './avatar.js';
+import { Multiplayer } from './multiplayer.js';
+import { POILayer } from './pois.js';
+import { SponsorLayer } from './sponsors.js';
+import { initUI, setStatus, setPresence, promptDisplayName, promptLocationConsent } from './ui.js';
+import { startDemoBots } from './demo.js';
+import { bearing } from './geo.js';
+import { ensureLocationPermission, ensureLocationServices } from './native.js';
+
+const map = createMap();
+initUI();
+
+// Presence shown = real online players (from server) + any local demo bots.
+let lastServerCount = 1;
+let demoBotCount = 0;
+const showPresence = () => setPresence(lastServerCount + demoBotCount);
+
+const net = new Multiplayer(map, (count) => { lastServerCount = count; showPresence(); });
+const poiLayer = new POILayer(map);
+const sponsorLayer = new SponsorLayer(map);
+
+let selfAvatar = null;
+let lastLoc = null;
+let layersPlaced = false;
+let didFirstFly = false;
+let demoStarted = false;
+let geoWatchId = null;   // active watchPosition id, or null when location is off
+let locationOn = false;  // whether we're actively tracking + sharing location
+
+const SUGGESTED_NAMES = ['Explorer', 'Wanderer', 'Otter', 'Sparrow', 'Comet', 'Nomad', 'Fox'];
+const randomName = () =>
+  `${SUGGESTED_NAMES[Math.floor(Math.random() * SUGGESTED_NAMES.length)]}-${Math.floor(Math.random() * 90 + 10)}`;
+
+// --- Layer loading ---------------------------------------------------------
+// Load data immediately; if we already have a location, place near user,
+// otherwise place once the first GPS fix arrives.
+async function loadLayers() {
+  try {
+    await Promise.all([poiLayer.load(), sponsorLayer.load()]);
+    placeLayers();
+  } catch (err) {
+    console.error(err);
+    setStatus('Could not load map data', true);
+  }
+}
+
+function placeLayers() {
+  if (layersPlaced && CONFIG.scatterNearUser && !lastLoc) return;
+  poiLayer.render(lastLoc);
+  sponsorLayer.render(lastLoc);
+  layersPlaced = true;
+}
+
+// Spawn simulated players once, near the user's known location.
+function maybeStartDemoBots(origin) {
+  if (!CONFIG.demoMode || demoStarted || !origin) return;
+  demoStarted = true;
+  const { count } = startDemoBots(map, origin, CONFIG.demoBots);
+  demoBotCount = count;
+  showPresence();
+  setStatus(`Demo mode: ${count} simulated players walking nearby`, true);
+}
+
+// --- Geolocation -----------------------------------------------------------
+// Request the OS permission (native) then begin tracking. Used both on first
+// consent and whenever the user re-enables location via the 📍 button.
+async function enableLocation() {
+  await ensureLocationPermission();          // app permission (allow Rosy to use location)
+  await ensureLocationServices();            // device GPS switch — Uber-style one-tap turn-on
+  startGeolocation();
+}
+
+function startGeolocation() {
+  if (!('geolocation' in navigator)) {
+    setStatus('Geolocation not supported — showing demo location', true);
+    useFallbackLocation();
+    return;
+  }
+
+  setStatus('Locating you…');
+  geoWatchId = navigator.geolocation.watchPosition(onPosition, onGeoError, {
+    enableHighAccuracy: true,
+    maximumAge: 2000,
+    timeout: 15000,
+  });
+  locationOn = true;
+  updateLocationButton();
+}
+
+// Turn location OFF: stop tracking and stop sharing our position with peers.
+function stopGeolocation() {
+  if (geoWatchId !== null) {
+    navigator.geolocation.clearWatch(geoWatchId);
+    geoWatchId = null;
+  }
+  locationOn = false;
+  updateLocationButton();
+  setStatus('Location off — you’re hidden from other explorers', true);
+}
+
+function updateLocationButton() {
+  const btn = document.getElementById('btn-location');
+  if (!btn) return;
+  btn.classList.toggle('active', locationOn);
+  btn.setAttribute('aria-pressed', String(locationOn));
+  btn.title = locationOn ? 'Location on — tap to turn off' : 'Location off — tap to turn on';
+}
+
+function onPosition(pos) {
+  const { longitude: lng, latitude: lat, heading } = pos.coords;
+  const loc = { lng, lat };
+
+  // Heading: prefer device heading; else infer from movement.
+  let hdg = Number.isFinite(heading) ? heading : (lastLoc ? bearing(lastLoc, loc) : 0);
+
+  if (!selfAvatar) {
+    selfAvatar = new Avatar(map, { lng, lat, color: '#ff5d8f', self: true, heading: hdg });
+  } else {
+    selfAvatar.moveTo(lng, lat, hdg);
+  }
+
+  if (!didFirstFly) {
+    didFirstFly = true;
+    flyTo(map, lng, lat, { zoom: CONFIG.defaultZoom, pitch: CONFIG.tiltedPitch });
+    setStatus('You are here — explore the map!', true);
+    // Place demo layers around the user now that we know where they are.
+    if (CONFIG.scatterNearUser) { lastLoc = loc; placeLayers(); }
+    maybeStartDemoBots(loc);
+  }
+
+  lastLoc = loc;
+  net.sendPosition(lng, lat, hdg);
+}
+
+function onGeoError(err) {
+  console.warn('Geolocation error:', err.message);
+  setStatus('Location unavailable — showing demo location', true);
+  if (geoWatchId !== null) {
+    navigator.geolocation.clearWatch(geoWatchId);
+    geoWatchId = null;
+  }
+  locationOn = false;
+  updateLocationButton();
+  useFallbackLocation();
+}
+
+function useFallbackLocation() {
+  const [lng, lat] = CONFIG.fallbackCenter;
+  lastLoc = { lng, lat };
+  if (!selfAvatar) {
+    selfAvatar = new Avatar(map, { lng, lat, color: '#ff5d8f', self: true });
+  }
+  if (!didFirstFly) {
+    didFirstFly = true;
+    flyTo(map, lng, lat);
+  }
+  placeLayers();
+  maybeStartDemoBots(lastLoc);
+  net.sendPosition(lng, lat, 0);
+}
+
+// --- Control buttons -------------------------------------------------------
+document.getElementById('btn-recenter').addEventListener('click', () => {
+  if (lastLoc) flyTo(map, lastLoc.lng, lastLoc.lat, { zoom: CONFIG.defaultZoom });
+});
+document.getElementById('btn-tilt').addEventListener('click', () => toggleTilt(map));
+document.getElementById('btn-compass').addEventListener('click', () => resetNorth(map));
+
+// Location toggle: let the user turn their location off (and back on) anytime.
+document.getElementById('btn-location').addEventListener('click', async () => {
+  if (locationOn) stopGeolocation();
+  else await enableLocation();
+});
+
+// Wave: show locally for instant feedback + broadcast so peers see it.
+document.getElementById('btn-wave').addEventListener('click', () => {
+  if (selfAvatar) selfAvatar.playEmote('wave');
+  net.sendEmote('wave');
+});
+
+// --- Go --------------------------------------------------------------------
+map.on('load', async () => {
+  loadLayers();
+
+  // Ask for a display name (persisted for the session) before we start
+  // broadcasting, so peers see the chosen name from the first update.
+  const name = CONFIG.displayNamePrompt
+    ? await promptDisplayName(randomName())
+    : randomName();
+  net.identify(name, '#ff5d8f');
+
+  // Ask for location approval up front (our own explainer). If they allow, we
+  // request the OS permission and start tracking; if not, the app still runs on
+  // a demo location and they can enable it later via the 📍 button.
+  updateLocationButton();
+  const useLocation = await promptLocationConsent();
+  if (useLocation) {
+    await enableLocation();
+  } else {
+    setStatus('Location off — showing a demo location. Tap 📍 to turn it on.', true);
+    useFallbackLocation();
+  }
+});

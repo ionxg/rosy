@@ -1,0 +1,52 @@
+[
+  {
+    "id": "poi-ferry-building",
+    "name": "Ferry Building Marketplace",
+    "icon": "🏛️",
+    "lng": -122.3933,
+    "lat": 37.7955,
+    "description": "Historic transit terminal turned gourmet food hall, with artisan vendors and a waterfront farmers' market.",
+    "address": "1 Ferry Building, San Francisco, CA",
+    "photo": "https://images.unsplash.com/photo-1521747116042-5a810fda9664?w=800&q=80"
+  },
+  {
+    "id": "poi-painted-ladies",
+    "name": "Painted Ladies",
+    "icon": "🏘️",
+    "lng": -122.4329,
+    "lat": 37.7762,
+    "description": "The iconic row of pastel Victorian houses at Alamo Square, framed by the downtown skyline.",
+    "address": "Steiner St, San Francisco, CA",
+    "photo": "https://images.unsplash.com/photo-1551992006-9b3c20437b2c?w=800&q=80"
+  },
+  {
+    "id": "poi-coit-tower",
+    "name": "Coit Tower",
+    "icon": "🗼",
+    "lng": -122.4058,
+    "lat": 37.8024,
+    "description": "Art-deco tower on Telegraph Hill with 360° city views and 1930s WPA murals inside.",
+    "address": "1 Telegraph Hill Blvd, San Francisco, CA",
+    "photo": "https://images.unsplash.com/photo-1569060368522-4b6d11f6b9c0?w=800&q=80"
+  },
+  {
+    "id": "poi-japanese-garden",
+    "name": "Japanese Tea Garden",
+    "icon": "🌸",
+    "lng": -122.4702,
+    "lat": 37.7702,
+    "description": "The oldest public Japanese garden in the U.S., with koi ponds, a pagoda, and a serene tea house.",
+    "address": "75 Hagiwara Tea Garden Dr, San Francisco, CA",
+    "photo": "https://images.unsplash.com/photo-1503640538573-148065ba4904?w=800&q=80"
+  },
+  {
+    "id": "poi-pier39",
+    "name": "Pier 39 Sea Lions",
+    "icon": "🦭",
+    "lng": -122.4098,
+    "lat": 37.8085,
+    "description": "Lively waterfront pier famous for its resident sea lions, street performers, and bay views.",
+    "address": "Pier 39, San Francisco, CA",
+    "photo": "https://images.unsplash.com/photo-1534050359320-02900022671e?w=800&q=80"
+  }
+]

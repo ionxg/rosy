@@ -1,0 +1,8 @@
+{
+  "appId": "com.ion.rosy",
+  "appName": "Rosy",
+  "webDir": "public",
+  "server": {
+    "androidScheme": "https"
+  }
+}

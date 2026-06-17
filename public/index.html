@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d1117" />
+  <title>Rosy — Discover Your City</title>
+
+  <!-- MapLibre GL JS (open source) -->
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <link href="./css/styles.css" rel="stylesheet" />
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- Top bar: brand + live presence indicator -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span> Rosy
+    </div>
+    <div id="presence" class="presence" title="Players online">
+      <span class="presence-dot"></span>
+      <span id="presence-count">1</span> online
+    </div>
+  </header>
+
+  <!-- Floating map controls -->
+  <div class="controls">
+    <button id="btn-recenter" class="ctrl-btn" title="Recenter on me" aria-label="Recenter">◎</button>
+    <button id="btn-tilt" class="ctrl-btn" title="Toggle 3D tilt" aria-label="Toggle tilt">⬡</button>
+    <button id="btn-compass" class="ctrl-btn" title="Reset north" aria-label="Reset north">⌃</button>
+    <button id="btn-location" class="ctrl-btn" title="Toggle location" aria-label="Toggle location" aria-pressed="false">📍</button>
+    <button id="btn-wave" class="ctrl-btn ctrl-wave" title="Wave to nearby players" aria-label="Wave">👋</button>
+  </div>
+
+  <!-- Bottom status / GPS hint -->
+  <div id="status" class="status">Locating you…</div>
+
+  <!-- Slide-up info card (POIs + sponsors share this) -->
+  <div id="card" class="card" aria-hidden="true">
+    <button id="card-close" class="card-close" aria-label="Close">×</button>
+    <div id="card-media" class="card-media"></div>
+    <div class="card-body">
+      <div id="card-badge" class="card-badge"></div>
+      <h2 id="card-title" class="card-title"></h2>
+      <p id="card-desc" class="card-desc"></p>
+      <div id="card-extra" class="card-extra"></div>
+      <div class="card-actions">
+        <a id="card-directions" class="btn btn-primary" target="_blank" rel="noopener">Directions</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="card-scrim" class="card-scrim" hidden></div>
+
+  <!-- Location consent prompt (shown before we ask the OS for GPS) -->
+  <div id="loc-modal" class="name-modal" hidden>
+    <div class="name-box">
+      <h2>Use your location? 📍</h2>
+      <p>Rosy centers the map on where you are and shows your avatar to nearby
+         explorers. You can turn location off anytime from the 📍 button.</p>
+      <button id="loc-allow" type="button" class="btn btn-primary">Use my location</button>
+      <button id="loc-deny" type="button" class="btn btn-ghost">Not now</button>
+    </div>
+  </div>
+
+  <!-- First-load display-name prompt -->
+  <div id="name-modal" class="name-modal" hidden>
+    <form id="name-form" class="name-box">
+      <h2>Welcome to Rosy 🌹</h2>
+      <p>Pick a name other explorers will see on the map.</p>
+      <input id="name-input" class="name-input" type="text" maxlength="24"
+             autocomplete="off" placeholder="Your display name" />
+      <button type="submit" class="btn btn-primary">Start exploring</button>
+    </form>
+  </div>
+
+  <!-- Libraries -->
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+  <!-- App modules (ES modules) -->
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

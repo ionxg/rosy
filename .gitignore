@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Capacitor / Android build artifacts
+android/.gradle/
+android/build/
+android/app/build/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+.gradle/
+*.apk
+
+# IDE / OS
+.idea/
+.DS_Store
+*.local
+
+# Server logs
+server/out.log

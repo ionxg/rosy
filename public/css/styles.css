@@ -1,0 +1,432 @@
+/* Rosy — mobile-first UI
+   ------------------------------------------------------------ */
+:root {
+  --bg: #0d1117;
+  --panel: rgba(22, 27, 34, 0.92);
+  --panel-solid: #161b22;
+  --text: #e6edf3;
+  --muted: #9aa7b4;
+  --accent: #ff5d8f;
+  --accent-2: #5d9cff;
+  --online: #3ddc97;
+  --radius: 16px;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; }
+
+/* The [hidden] attribute must win over component display rules (e.g. the
+   name modal's `display: grid`). Author styles otherwise override the UA
+   `[hidden] { display: none }`, leaving "hidden" elements visible. */
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#map {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---- Top bar ---------------------------------------------------------- */
+.topbar {
+  position: absolute;
+  top: calc(10px + var(--safe-top));
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.3px;
+  background: var(--panel);
+  padding: 8px 14px;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+.brand-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.presence {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--panel);
+  padding: 8px 12px;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+.presence-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--online);
+  box-shadow: 0 0 8px var(--online);
+  animation: pulse 1.8s infinite;
+}
+#presence-count { color: var(--text); font-weight: 700; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.8); }
+}
+
+/* ---- Floating controls ------------------------------------------------ */
+.controls {
+  position: absolute;
+  right: 12px;
+  bottom: calc(96px + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10;
+}
+.ctrl-btn {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+  transition: transform 0.1s ease, background 0.2s ease;
+}
+.ctrl-btn:active { transform: scale(0.92); background: var(--accent); }
+/* Location button when actively tracking */
+.ctrl-btn.active { background: var(--accent); color: #fff; }
+
+/* ---- Bottom status ---------------------------------------------------- */
+.status {
+  position: absolute;
+  left: 50%;
+  bottom: calc(20px + var(--safe-bottom));
+  transform: translateX(-50%);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+  max-width: 88vw;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.3s ease;
+}
+.status.hidden { opacity: 0; pointer-events: none; }
+
+/* ---- Avatar markers (self + peers) ------------------------------------ */
+.avatar {
+  --c: var(--accent);
+  width: 30px;
+  height: 30px;
+  position: relative;
+  transform: translateZ(0);
+}
+.avatar .ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--c);
+  border: 3px solid #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(0,0,0,0.15);
+}
+.avatar .pulse {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: var(--c);
+  opacity: 0.35;
+  animation: avatar-pulse 2s ease-out infinite;
+}
+.avatar.self .pulse { animation-duration: 1.6s; }
+.avatar .label {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(0,0,0,0.7);
+  padding: 2px 7px;
+  border-radius: 8px;
+  color: #fff;
+  pointer-events: none;
+}
+@keyframes avatar-pulse {
+  0% { transform: scale(0.6); opacity: 0.45; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* Direction arrow — rotates (via JS) to face the avatar's travel heading. */
+.avatar .dir {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+.avatar .dir::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 9px solid #fff;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));
+}
+
+/* Emote bubble that floats up above the avatar. */
+.avatar .emote {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22px;
+  opacity: 0;
+  pointer-events: none;
+}
+.avatar .emote.show {
+  animation: emote-pop 1.5s ease-out forwards;
+}
+@keyframes emote-pop {
+  0%   { opacity: 0; transform: translate(-50%, 0) scale(0.4); }
+  20%  { opacity: 1; transform: translate(-50%, -14px) scale(1.15); }
+  70%  { opacity: 1; transform: translate(-50%, -26px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -40px) scale(0.9); }
+}
+
+.ctrl-wave:active { background: var(--accent); }
+
+/* ---- Display-name modal ----------------------------------------------- */
+.name-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(5, 8, 12, 0.7);
+  backdrop-filter: blur(6px);
+}
+.name-box {
+  width: 100%;
+  max-width: 360px;
+  background: var(--panel-solid);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 24px 22px;
+  text-align: center;
+}
+.name-box h2 { margin: 0 0 6px; font-size: 22px; }
+.name-box p { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+.name-input {
+  width: 100%;
+  padding: 13px 14px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: #0d1117;
+  color: var(--text);
+  font-size: 16px; /* >=16px avoids iOS zoom-on-focus */
+  outline: none;
+}
+.name-input:focus { border-color: var(--accent); }
+.name-box .btn { width: 100%; }
+.name-box .btn + .btn { margin-top: 10px; }
+
+/* ---- POI + Sponsor markers -------------------------------------------- */
+.poi-marker {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  background: var(--panel-solid);
+  border: 2px solid var(--accent-2);
+  border-radius: 50% 50% 50% 4px;
+  transform: rotate(45deg);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.poi-marker > span { transform: rotate(-45deg); }
+.poi-marker:active { transform: rotate(45deg) scale(0.9); }
+
+.sponsor-marker {
+  position: relative;
+  cursor: pointer;
+  filter: drop-shadow(0 6px 8px rgba(0,0,0,0.5));
+  transition: transform 0.12s ease;
+}
+.sponsor-marker:active { transform: scale(0.92); }
+/* faux-3D building block */
+.sponsor-marker .building {
+  width: 30px;
+  height: 38px;
+  background: linear-gradient(160deg, var(--c, #ffb13d) 0%, color-mix(in srgb, var(--c, #ffb13d) 60%, #000) 100%);
+  border-radius: 5px;
+  border: 2px solid #fff;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+}
+.sponsor-marker .tag {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* ---- Info card -------------------------------------------------------- */
+.card-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 20;
+  animation: fade-in 0.2s ease;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+.card {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  background: var(--panel-solid);
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.55);
+  transform: translateY(110%);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  max-height: 82vh;
+  overflow-y: auto;
+  padding-bottom: var(--safe-bottom);
+}
+.card.open { transform: translateY(0); }
+
+.card-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.card-media {
+  width: 100%;
+  height: 200px;
+  background: #21262d center/cover no-repeat;
+}
+.card-media.empty { height: 16px; }
+
+.card-body { padding: 16px 20px 24px; }
+
+.card-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--accent-2);
+  margin-bottom: 6px;
+}
+.card-badge.sponsor { color: var(--accent); }
+
+.card-title { margin: 0 0 8px; font-size: 22px; }
+.card-desc { margin: 0 0 14px; color: var(--muted); line-height: 1.5; font-size: 15px; }
+
+.card-extra { margin-bottom: 16px; }
+.offer {
+  background: linear-gradient(135deg, rgba(255,93,143,0.18), rgba(93,156,255,0.18));
+  border: 1px solid rgba(255,93,143,0.4);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.offer b { color: var(--accent); }
+.menu-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin: 0 0 8px; }
+.menu-list { list-style: none; margin: 0; padding: 0; }
+.menu-list li {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 14px;
+}
+.menu-list li .price { color: var(--accent-2); font-weight: 600; white-space: nowrap; }
+
+.card-actions { display: flex; gap: 10px; }
+.btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 16px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:active { filter: brightness(0.9); }
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+.btn-ghost:active { background: rgba(255, 255, 255, 0.06); }
+
+/* MapLibre attribution legibility on dark UI */
+.maplibregl-ctrl-attrib { font-size: 10px; }
