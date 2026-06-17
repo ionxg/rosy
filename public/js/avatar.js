@@ -50,12 +50,12 @@ export class Avatar {
     this.marker = new maplibregl.Marker({
       element: el,
       anchor: 'center',
-      // rotationAlignment 'map' keeps the heading arrow pointing the correct
-      // geographic way as the map rotates. pitchAlignment 'viewport' keeps the
-      // avatar standing UPRIGHT (a billboard pinned to its lng/lat) instead of
-      // lying flat on the ground — so it stays locked to the right spot when you
-      // zoom/tilt and doesn't drift or vanish past the horizon.
-      rotationAlignment: 'map',
+      // Keep the avatar a screen-stable upright pin: it stays locked to its
+      // lng/lat and never rotates or tilts with the map. This matters on phones,
+      // where a pinch-zoom twists the map slightly — with 'map' alignment that
+      // twist makes a stationary peer's avatar swing around and look like it's
+      // moving. 'viewport' alignment keeps it rock-steady on its real spot.
+      rotationAlignment: 'viewport',
       pitchAlignment: 'viewport',
     });
 

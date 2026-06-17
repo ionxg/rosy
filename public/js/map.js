@@ -25,9 +25,13 @@ export function createMap(initialLoc) {
     attributionControl: { compact: true },
   });
 
-  // Gestures: rotate + pitch with two fingers / right-drag.
+  // Gestures: allow deliberate rotate/pitch via right-drag (desktop), but turn
+  // OFF rotation during touch pinch-zoom. On a phone a pinch almost always adds
+  // a small twist; left on, that twist spins the map (and made stationary peers
+  // look like they were moving). Disabling it keeps phone zoom a clean, stable
+  // zoom — matching how it already behaves on desktop with the scroll wheel.
   map.dragRotate.enable();
-  map.touchZoomRotate.enableRotation();
+  map.touchZoomRotate.disableRotation();
   map.keyboard.enable();
 
   // Built-in nav (zoom +/-, compass, pitch visualizer).
