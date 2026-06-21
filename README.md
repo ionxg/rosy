@@ -1,42 +1,35 @@
-# Rosy 🌹
+# Rosy
 
-A web-based, location-based map for **local tourism & discovery** — a smaller-scale,
-browser version of Pokémon GO. It centers an interactive 3D map on your real GPS
-location, drops a live avatar that other connected players can see in real time,
-and surfaces tourism points of interest and sponsored businesses as tappable
-markers.
+Rosy is a browser-based map game for local tourism and discovery. Think of it as
+a small, web version of Pokémon GO. It puts an interactive 3D map on your real
+GPS location, shows a live avatar that other connected players can see, and marks
+nearby points of interest and sponsored businesses you can tap for details.
 
-Built with **MapLibre GL JS** (open source maps) + **Node.js / Socket.io** for
-real-time multiplayer presence.
-
----
+It's built on MapLibre GL JS for the maps and Node.js with Socket.io for the
+real-time multiplayer side.
 
 ## Features
 
-- 🗺️ **3D interactive map** — MapLibre GL JS with 3D building extrusions, plus
-  zoom / rotate / tilt camera controls.
-- 📍 **Real GPS centering** — uses the browser Geolocation API and follows you
-  as your position updates.
-- 🧍 **Live avatar** — a marker that sits in the 3D scene (tilts with the map)
-  and rotates to face your heading.
-- 👥 **Real-time multiplayer** — connected users broadcast their positions over
-  Socket.io and see each other's avatars, with an online-presence counter. Peer
-  avatars **glide smoothly** between updates (tweened, no teleporting) and turn
-  to face their direction of travel.
-- 🪪 **Display names** — pick a name on first load (kept for the session); it
-  shows on a label above your avatar and is broadcast to everyone.
-- 👋 **Waves / emotes** — tap the wave button to send an emote that briefly
-  animates above your avatar for all players.
-- 🤖 **Demo mode** — flip one config flag to spawn 2–3 simulated players who
-  walk looping paths near you, so multiplayer is testable in a single tab.
-- 🏛️ **Points of interest** — tourism spots loaded from a JSON file; tap a
-  marker to open an info card with name, photo, description, and a directions link.
-- 🍽️ **Sponsored locations** — data-driven businesses rendered as distinct
-  faux-3D building markers; tap to see details, menu, and current offer. Add new
-  sponsors by editing one JSON file.
-- 📱 **Mobile-first UI** — touch-friendly, safe-area aware, dark theme.
-
----
+- 3D interactive map using MapLibre GL JS, with 3D buildings and zoom, rotate,
+  and tilt controls.
+- Real GPS centering through the browser Geolocation API, following you as your
+  position changes.
+- A live avatar marker that sits in the 3D scene, tilts with the map, and rotates
+  to face the way you're heading.
+- Real-time multiplayer over Socket.io. Connected players see each other's avatars
+  and an online-presence counter. Peer avatars glide between updates instead of
+  teleporting, and turn to face their direction of travel.
+- Display names. Pick a name on first load and it shows on a label above your
+  avatar and is sent to everyone else for the session.
+- Waves. Tap the wave button to send a quick emote that animates above your
+  avatar for all players.
+- Demo mode. Flip one config flag to spawn a couple of simulated players who walk
+  looping paths near you, so you can test multiplayer in a single tab.
+- Points of interest loaded from a JSON file. Tap a marker for an info card with
+  the name, photo, description, and a directions link.
+- Sponsored locations rendered as distinct building markers. Tap one to see
+  details, a menu, and the current offer. Adding a sponsor is a JSON edit.
+- Mobile-first UI: touch-friendly, safe-area aware, dark theme.
 
 ## Project structure
 
@@ -65,14 +58,12 @@ rosy-web/
 └── README.md
 ```
 
-Each concern lives in its own module (map, avatar, multiplayer, POIs, sponsors)
-so they can be developed and reasoned about independently.
-
----
+Each piece (map, avatar, multiplayer, POIs, sponsors) lives in its own module so
+you can work on them separately.
 
 ## Run it locally
 
-**Prerequisites:** Node.js 18+.
+You'll need Node.js 18 or newer.
 
 ```bash
 cd rosy-web/server
@@ -80,43 +71,47 @@ npm install
 npm start
 ```
 
-Then open **http://localhost:3000** in your browser.
+Then open http://localhost:3000 in your browser.
 
-> The Node server serves the front-end *and* hosts the Socket.io endpoint on the
-> same origin, so there's nothing else to start.
+The Node server serves the front-end and hosts the Socket.io endpoint on the same
+origin, so there's nothing else to start.
 
 ### Geolocation note
-Browsers only grant the Geolocation API on **`localhost`** or **HTTPS**. On
-`localhost` it works out of the box. If the browser blocks location (or you deny
-the prompt), Rosy falls back to a demo location so the app still runs.
+
+Browsers only allow the Geolocation API on `localhost` or over HTTPS. On
+`localhost` it works out of the box. If the browser blocks location, or you deny
+the prompt, Rosy falls back to a demo location so the app still runs.
 
 ### Try multiplayer
-Open the URL in **two browser windows/tabs** (or two devices on the same network
-pointing at your machine's LAN IP, e.g. `http://192.168.x.x:3000`). Each gets its
-own avatar, and you'll see the others move in real time. The "online" counter in
-the top-right reflects live presence.
 
-> For phones to reach your laptop they must be on the same Wi‑Fi, and the phone
-> needs HTTPS for GPS. Easiest path: run a tunnel like `npx localtunnel --port 3000`
-> or `ngrok http 3000` and open the HTTPS URL it gives you.
+Open the URL in two browser windows or tabs, or on two devices on the same
+network pointing at your machine's LAN IP (for example
+`http://192.168.x.x:3000`). Each gets its own avatar and you'll see the others
+move in real time. The online counter in the top-right reflects who's connected.
 
----
+For phones to reach your laptop they need to be on the same Wi-Fi, and the phone
+needs HTTPS for GPS to work. The easiest path is to run a tunnel like
+`npx localtunnel --port 3000` or `ngrok http 3000` and open the HTTPS URL it
+gives you.
 
-## Display names, waves & demo mode
+## Display names, waves, and demo mode
 
 ### Display names
-On first load Rosy asks for a **display name**. It's stored in `sessionStorage`
-(kept for the browser session), shown on a label above your avatar, and broadcast
-to other players over Socket.io. To skip the prompt and use a random guest name,
-set `displayNamePrompt: false` in `public/js/config.js`. To pick a new name, clear
-the tab's session storage (or open a fresh private window).
+
+On first load Rosy asks for a display name. It's stored in `sessionStorage` for
+the browser session, shown on a label above your avatar, and sent to other
+players over Socket.io. To skip the prompt and use a random guest name, set
+`displayNamePrompt: false` in `public/js/config.js`. To pick a new name, clear
+the tab's session storage or open a fresh private window.
 
 ### Waves
-Tap the **👋 button** (bottom-right controls) to send a wave. It animates above
-your avatar instantly and is broadcast so every other player sees it too.
+
+Tap the wave button in the bottom-right controls to send a wave. It animates
+above your avatar right away and is sent so every other player sees it.
 
 ### Demo mode (test multiplayer in a single tab)
-You don't need a second device to see multiplayer come alive. In
+
+You don't need a second device to see multiplayer working. In
 `public/js/config.js`:
 
 ```js
@@ -124,19 +119,18 @@ demoMode: true,   // spawn simulated players
 demoBots: 3,      // how many (1–3)
 ```
 
-Reload the page. Rosy spawns 2–3 **simulated players** that walk looping paths
-near your location — gliding smoothly, turning to face their direction of travel,
-and occasionally throwing an emote. They're rendered client-side only, so they
-never reach the server or affect real presence (the online counter shows
-`real players + bots`). The bot cast is data-driven — edit the `BOTS` array in
-`public/js/demo.js` to change names, colors, path radius, or speed.
-
----
+Reload the page. Rosy spawns a few simulated players that walk looping paths near
+your location, gliding between points, turning to face their direction of travel,
+and occasionally throwing an emote. They run client-side only, so they never
+reach the server or affect real presence (the online counter shows real players
+plus bots). To change their names, colors, path radius, or speed, edit the `BOTS`
+array in `public/js/demo.js`.
 
 ## Adding your own content
 
 ### Points of interest
-Edit `public/data/pois.json`. Each entry:
+
+Edit `public/data/pois.json`. Each entry looks like this:
 
 ```json
 {
@@ -153,7 +147,8 @@ Edit `public/data/pois.json`. Each entry:
 ```
 
 ### Sponsored locations
-Edit `public/data/sponsors.json`. Each entry supports an `offer` and a `menu`:
+
+Edit `public/data/sponsors.json`. Each entry can include an `offer` and a `menu`:
 
 ```json
 {
@@ -175,16 +170,15 @@ Edit `public/data/sponsors.json`. Each entry supports an `offer` and a `menu`:
 }
 ```
 
-No code changes are required to add POIs or sponsors — just append to the JSON.
+Adding POIs or sponsors doesn't need any code changes, just append to the JSON.
 
 ### Demo placement
-The sample data uses real San Francisco coordinates. Because your actual GPS
-location is probably elsewhere, `config.js` ships with `scatterNearUser: true`,
-which **translates the sample markers to appear around wherever you are** so the
-demo is explorable anywhere. Set it to `false` to honor the literal coordinates
-in the JSON files.
 
----
+The sample data uses real San Francisco coordinates. Since your actual GPS
+location is probably somewhere else, `config.js` ships with
+`scatterNearUser: true`, which moves the sample markers to appear around wherever
+you are so the demo works anywhere. Set it to `false` to use the literal
+coordinates in the JSON files.
 
 ## Configuration
 
@@ -192,41 +186,37 @@ All tunables live in `public/js/config.js`:
 
 | Key | Purpose |
 | --- | --- |
-| `mapStyle` | MapLibre style URL (default: OpenFreeMap "liberty", free / no key). |
+| `mapStyle` | MapLibre style URL (default: OpenFreeMap "liberty", free, no key). |
 | `socketUrl` | Socket.io endpoint (defaults to same origin). |
 | `fallbackCenter` | Camera/location used when GPS is unavailable. |
 | `defaultZoom` / `tiltedPitch` | Initial camera framing. |
 | `poiData` / `sponsorData` | Paths to the JSON data files. |
-| `scatterNearUser` | Demo helper — place sample markers around the user. |
+| `scatterNearUser` | Demo helper that places sample markers around the user. |
 | `moveBroadcastInterval` | Throttle (ms) for position broadcasts. |
 | `peerTweenMs` | Glide duration (ms) when a peer avatar moves between updates. |
 | `displayNamePrompt` | Ask for a display name on first load (else random guest). |
 | `demoMode` | Spawn simulated players for single-tab testing. |
 | `demoBots` | How many simulated players (1–3) when `demoMode` is on. |
 
----
-
-## How it works (data flow)
+## How it works
 
 1. `main.js` builds the map, asks for a display name, then starts
    `navigator.geolocation.watchPosition`.
-2. The chosen name is sent via `player:hello`; each GPS fix moves the local
-   **avatar** and (throttled) emits `player:move` to the server.
-3. The **Socket.io** server keeps an in-memory presence map and relays joins,
-   moves, names, leaves, and **emotes** to other clients, plus a `presence` count.
-4. Remote clients spawn peer **avatars** and **tween** them between updates,
-   rotating each to face its travel direction; emotes animate above the sender.
-5. **POI** and **sponsor** layers fetch their JSON and render tappable markers
-   that open the shared info **card**.
+2. The chosen name is sent via `player:hello`. Each GPS fix moves the local
+   avatar and, throttled, emits `player:move` to the server.
+3. The Socket.io server keeps an in-memory presence map and relays joins, moves,
+   names, leaves, and emotes to other clients, along with a `presence` count.
+4. Remote clients spawn peer avatars and tween them between updates, rotating
+   each to face its travel direction. Emotes animate above the sender.
+5. The POI and sponsor layers fetch their JSON and render tappable markers that
+   open the shared info card.
 6. With `demoMode` on, `demo.js` spawns client-side bot avatars that loop near
-   the user — no server involved.
+   the user, with no server involved.
 
----
-
-## Tech & licenses
+## Tech and licenses
 
 - [MapLibre GL JS](https://maplibre.org/) — BSD-3-Clause.
-- [OpenFreeMap](https://openfreemap.org/) tiles/style — free, no API key.
+- [OpenFreeMap](https://openfreemap.org/) tiles and style — free, no API key.
 - [Socket.io](https://socket.io/) — MIT.
 - [Express](https://expressjs.com/) — MIT.
 
